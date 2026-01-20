@@ -1,5 +1,6 @@
 package com.danielrothmann.weatherappcompose.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,174 +39,120 @@ import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 @Preview
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
-    Box(
+    Image(
+        painter = painterResource(id = R.drawable.weather_background),
+        contentDescription = "weather_background",
         modifier = Modifier
             .fillMaxSize()
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.weather_background),
-            contentDescription = "weather_background",
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.7f),
-            contentScale = ContentScale.Crop // Использую Crop вместо FillBounds (по умолчанию)
-        )
-
-        InfoDetailsCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .padding(16.dp)
-        )
-    }
+            .alpha(0.7f),
+        contentScale = ContentScale.Crop // Использую Crop вместо FillBounds (по умолчанию)
+    )
+    InfoDetailsCard()
 }
 
+@Preview
 @Composable
 fun InfoDetailsCard(modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
-       // elevation = CardDefaults.cardElevation(2.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = CardBackground.copy(alpha = 0.3f) //прозрачность для лучшей видимости
-        )
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground.copy(0.3f)),
+        shape = RoundedCornerShape(10.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp),
-                horizontalArrangement = Arrangement.SpaceBetween, // Пространство между элементами
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Левая часть - дата и время
-                Column(
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "19 Jan 2026",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                Text(
+                    text = "20 Jan 2026 14:08",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "20:08",
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        ),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-
-                // Правая часть - иконка и описание
-                Column(
-                    horizontalAlignment = Alignment.End, // Прижимаем к правому краю
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    AsyncImage(
-                        model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
-                        contentDescription = "condition",
-                        modifier = Modifier.size(36.dp)
-                    )
-
-                    Text(
-                        text = "Partly cloudy",
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        ),
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
+                )
+                AsyncImage(
+                    model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
+                    contentDescription = "condition",
+                    modifier = Modifier.size(36.dp)
+                )
             }
-
-
             Text(
-                text = "London",
+                text = "City",
                 style = TextStyle(
-                    fontSize = 26.sp,
+                    fontSize = 24.sp,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold
-                ),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            )
+            Text(
+                text = "23 °C",
+                style = TextStyle(
+                    fontSize = 60.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            )
+            Text(
+                text = "Condition",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            )
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                textAlign = TextAlign.Center
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = "Temperature",
-                        style = TextStyle(
-                            fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
+                IconButton(
+                    onClick = { /*TODO*/
+                        Log.d("TAG", "Click btn_search ")
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.btn_searh),
+                        contentDescription = "search",
+                        tint = Color.White
                     )
-                    Text(
-                        text = "15°C",
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(top = 2.dp)
+                }
+                Text(
+                    text = "23°C / 17°C",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                )
+                IconButton(
+                    onClick = { /*TODO*/
+                        Log.d("TAG", "Click btn_sync ")
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.btm_sync),
+                        contentDescription = "sync",
+                        tint = Color.White
                     )
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Humidity",
-                        style = TextStyle(
-                            fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
-                    )
-                    Text(
-                        text = "65%",
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InfoDetailsCardPreview() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.DarkGray)
-    ) {
-        InfoDetailsCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    MainScreen()
 }
