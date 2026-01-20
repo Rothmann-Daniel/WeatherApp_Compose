@@ -13,16 +13,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -35,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.danielrothmann.weatherappcompose.R
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
+import kotlinx.coroutines.launch
 
 @Preview
 @Composable
@@ -47,7 +56,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
             .alpha(0.7f),
         contentScale = ContentScale.Crop // Использую Crop вместо FillBounds (по умолчанию)
     )
-    InfoDetailsCard()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        InfoDetailsCard()
+        TablayoutDetails()
+    }
+
+
 }
 
 @Preview
@@ -97,7 +114,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                 )
             )
             Text(
-                text = "23 °C",
+                text = "23°C",
                 style = TextStyle(
                     fontSize = 60.sp,
                     color = Color.White,
@@ -135,7 +152,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     text = "23°C / 17°C",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = Color.White.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                 )
@@ -152,6 +169,69 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     )
                 }
 
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun TablayoutDetails(modifier: Modifier = Modifier) {
+    val tabList = listOf("HOURS", "DAYS")
+    val pagerState = rememberPagerState(pageCount = { tabList.size })
+    val tabIndex = pagerState.currentPage
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        modifier = modifier
+            .clip(shape = RoundedCornerShape(5.dp))
+            .padding(8.dp)
+    ) {
+        TabRow(
+            selectedTabIndex = tabIndex,
+            containerColor = CardBackground.copy(alpha = 0.5f),
+            contentColor = Color.White,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[tabIndex]),
+                    height = 2.dp,
+                    color = Color.White
+                )
+            }
+        ) {
+            tabList.forEachIndexed { index, textTitle ->
+                Tab(
+                    selected = tabIndex == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                    text = {
+                        Text(
+                            text = textTitle,
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                color = if (tabIndex == index) Color.White else Color.White.copy(alpha = 0.7f),
+                                fontWeight = if (tabIndex == index) FontWeight.Bold else FontWeight.Normal
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
+        // HorizontalPager ЗА TabRow
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp) // Задаем нужную высоту
+        ) { page ->
+            when (page) {
+                0 -> Log.d("TAG", "HoursWeatherScreen")
+                1 -> Log.d("TAG", "DaysWeatherScreen")
+                else -> Log.d("TAG", "Unknown page")
             }
         }
     }
