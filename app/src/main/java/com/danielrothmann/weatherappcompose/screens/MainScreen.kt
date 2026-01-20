@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,28 +62,33 @@ fun MainScreen(modifier: Modifier = Modifier) {
 fun InfoDetailsCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
-        elevation = CardDefaults.cardElevation(4.dp),
+       // elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground.copy(alpha = 0.5f) // Полупрозрачный фон
+            containerColor = CardBackground.copy(alpha = 0.3f) //прозрачность для лучшей видимости
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, // Пространство между элементами
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                // Левая часть - дата и время
+                Column(
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = "19 Jan 2026",
                         style = TextStyle(
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -88,37 +96,50 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     Text(
                         text = "20:08",
                         style = TextStyle(
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.8f)
-                        )
+                        ),
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
 
-                AsyncImage(
-                    model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
-                    contentDescription = "condition",
-                    modifier = Modifier.size(48.dp)
-                )
+                // Правая часть - иконка и описание
+                Column(
+                    horizontalAlignment = Alignment.End, // Прижимаем к правому краю
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
+                        contentDescription = "condition",
+                        modifier = Modifier.size(36.dp)
+                    )
+
+                    Text(
+                        text = "Partly cloudy",
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        ),
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
 
-            // Город по центру
-            Box(
+
+            Text(
+                text = "London",
+                style = TextStyle(
+                    fontSize = 26.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "London",
-                    style = TextStyle(
-                        fontSize = 32.sp, // Увеличил размер для акцента
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    ),
-                )
-            }
+                textAlign = TextAlign.Center
+            )
 
-            // дополнительные данные о погоде
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -127,17 +148,18 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     Text(
                         text = "Temperature",
                         style = TextStyle(
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             color = Color.White.copy(alpha = 0.6f)
                         )
                     )
                     Text(
                         text = "15°C",
                         style = TextStyle(
-                            fontSize = 24.sp,
+                            fontSize = 18.sp,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
-                        )
+                        ),
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
 
@@ -145,17 +167,18 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     Text(
                         text = "Humidity",
                         style = TextStyle(
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             color = Color.White.copy(alpha = 0.6f)
                         )
                     )
                     Text(
                         text = "65%",
                         style = TextStyle(
-                            fontSize = 24.sp,
+                            fontSize = 18.sp,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
-                        )
+                        ),
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
             }
