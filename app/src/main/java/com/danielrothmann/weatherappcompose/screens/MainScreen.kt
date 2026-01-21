@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.danielrothmann.weatherappcompose.R
+import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 import kotlinx.coroutines.launch
 
@@ -234,22 +236,39 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(15) {
-                            ListItemCard()
+                        itemsIndexed(
+                            listOf(
+                                WeatherModel(
+                                    "Moscow",
+                                    "20 Jan 2026 17:45",
+                                    "Light rain",
+                                    "//cdn.weatherapi.com/weather/64x64/day/296.png",
+                                    "23",
+                                    "",
+                                    "",
+                                    ""
+                                ),
+                                WeatherModel(
+                                    "Moscow",
+                                    "20 Jan 2026 17:45",
+                                    "Light rain",
+                                    "//cdn.weatherapi.com/weather/64x64/day/296.png",
+                                    "",
+                                    "17",
+                                    "11",
+                                    "SomeInfo"
+                                )
+                            )
+                        ) { _, item ->
+                            ListItemCard(item)
                         }
                     }
                 }
 
                 1 -> {
                     Log.d("TAG", "DaysWeatherScreen")
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(3) {
-                            ListItemCard()
-                        }
-                    }
                 }
+
                 else -> Log.d("TAG", "Unknown page")
             }
         }

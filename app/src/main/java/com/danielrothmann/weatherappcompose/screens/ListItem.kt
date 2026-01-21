@@ -17,15 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 
-@Preview(showBackground = true)
 @Composable
-fun ListItemCard() {
+fun ListItemCard(itemModel: WeatherModel) {
     Card(
         modifier = Modifier.fillMaxWidth()
             .padding(top = 4.dp),
@@ -43,14 +42,14 @@ fun ListItemCard() {
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
             ) {
                 Text(
-                    text = "time",
+                    text = itemModel.localtime,
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.White
                     )
                 )
                 Text(
-                    text = "condition",
+                    text = itemModel.condition,
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.White
@@ -58,7 +57,11 @@ fun ListItemCard() {
                 )
             }
             Text(
-                text = "23°C",
+                text = if (itemModel.currentTemp.isNotEmpty()) {
+                    "${itemModel.currentTemp}°C"
+                } else {
+                    "${itemModel.maxTemp}°/${itemModel.minTemp}°C"
+                },
                 style = TextStyle(
                     fontSize = 24.sp,
                     color = Color.White,
@@ -67,8 +70,8 @@ fun ListItemCard() {
                 )
             )
             AsyncImage(
-                model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
-                contentDescription = "condition",
+                model = "https:${itemModel.imageUrl}",
+                contentDescription = "itemModel.imageUr",
                 modifier = Modifier.size(36.dp)
             )
         }
