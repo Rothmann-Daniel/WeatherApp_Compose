@@ -2,17 +2,15 @@ package com.danielrothmann.weatherappcompose.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,6 +60,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     ) {
         InfoDetailsCard()
         TablayoutDetails()
+        // ListItemCard()
     }
 
 
@@ -212,7 +211,9 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
                             text = textTitle,
                             style = TextStyle(
                                 fontSize = 16.sp,
-                                color = if (tabIndex == index) Color.White else Color.White.copy(alpha = 0.7f),
+                                color = if (tabIndex == index) Color.White else Color.White.copy(
+                                    alpha = 0.7f
+                                ),
                                 fontWeight = if (tabIndex == index) FontWeight.Bold else FontWeight.Normal
                             )
                         )
@@ -226,11 +227,29 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp) // Задаем нужную высоту
         ) { page ->
             when (page) {
-                0 -> Log.d("TAG", "HoursWeatherScreen")
-                1 -> Log.d("TAG", "DaysWeatherScreen")
+                0 -> {
+                    Log.d("TAG", "HoursWeatherScreen")
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(15) {
+                            ListItemCard()
+                        }
+                    }
+                }
+
+                1 -> {
+                    Log.d("TAG", "DaysWeatherScreen")
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(3) {
+                            ListItemCard()
+                        }
+                    }
+                }
                 else -> Log.d("TAG", "Unknown page")
             }
         }
