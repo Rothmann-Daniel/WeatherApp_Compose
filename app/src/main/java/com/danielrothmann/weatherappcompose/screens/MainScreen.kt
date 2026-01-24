@@ -25,6 +25,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,9 +47,9 @@ import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 import kotlinx.coroutines.launch
 
-@Preview
+
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(modifier: Modifier = Modifier, daysList: MutableState<List<WeatherModel>>) {
     Image(
         painter = painterResource(id = R.drawable.weather_background),
         contentDescription = "weather_background",
@@ -61,7 +63,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
     ) {
         InfoDetailsCard()
-        TablayoutDetails()
+        TablayoutDetails(daysList = daysList)
         // ListItemCard()
     }
 
@@ -177,7 +179,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun TablayoutDetails(modifier: Modifier = Modifier) {
+fun TablayoutDetails(daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf()), modifier: Modifier = Modifier) {
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
     val tabIndex = pagerState.currentPage
@@ -233,40 +235,18 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
             when (page) {
                 0 -> {
                     Log.d("TAG", "HoursWeatherScreen")
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        itemsIndexed(
-                            listOf(
-                                WeatherModel(
-                                    "Moscow",
-                                    "20 Jan 2026 17:45",
-                                    "Light rain",
-                                    "//cdn.weatherapi.com/weather/64x64/day/296.png",
-                                    "23",
-                                    "",
-                                    "",
-                                    ""
-                                ),
-                                WeatherModel(
-                                    "Moscow",
-                                    "20 Jan 2026 17:45",
-                                    "Light rain",
-                                    "//cdn.weatherapi.com/weather/64x64/day/296.png",
-                                    "",
-                                    "17",
-                                    "11",
-                                    "SomeInfo"
-                                )
-                            )
-                        ) { _, item ->
-                            ListItemCard(item)
-                        }
-                    }
+
                 }
 
                 1 -> {
                     Log.d("TAG", "DaysWeatherScreen")
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        itemsIndexed(daysList.value) { index, item ->
+                            ListItemCard(item)
+                        }
+                    }
                 }
 
                 else -> Log.d("TAG", "Unknown page")
