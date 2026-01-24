@@ -2,17 +2,16 @@ package com.danielrothmann.weatherappcompose.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +25,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,12 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.danielrothmann.weatherappcompose.R
+import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 import kotlinx.coroutines.launch
 
-@Preview
+
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(modifier: Modifier = Modifier, daysList: MutableState<List<WeatherModel>>) {
     Image(
         painter = painterResource(id = R.drawable.weather_background),
         contentDescription = "weather_background",
@@ -61,7 +63,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
     ) {
         InfoDetailsCard()
-        TablayoutDetails()
+        TablayoutDetails(daysList = daysList)
+        // ListItemCard()
     }
 
 
@@ -176,7 +179,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun TablayoutDetails(modifier: Modifier = Modifier) {
+fun TablayoutDetails(daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf()), modifier: Modifier = Modifier) {
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
     val tabIndex = pagerState.currentPage
@@ -212,7 +215,9 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
                             text = textTitle,
                             style = TextStyle(
                                 fontSize = 16.sp,
-                                color = if (tabIndex == index) Color.White else Color.White.copy(alpha = 0.7f),
+                                color = if (tabIndex == index) Color.White else Color.White.copy(
+                                    alpha = 0.7f
+                                ),
                                 fontWeight = if (tabIndex == index) FontWeight.Bold else FontWeight.Normal
                             )
                         )
@@ -226,11 +231,24 @@ fun TablayoutDetails(modifier: Modifier = Modifier) {
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp) // Задаем нужную высоту
         ) { page ->
             when (page) {
-                0 -> Log.d("TAG", "HoursWeatherScreen")
-                1 -> Log.d("TAG", "DaysWeatherScreen")
+                0 -> {
+                    Log.d("TAG", "HoursWeatherScreen")
+
+                }
+
+                1 -> {
+                    Log.d("TAG", "DaysWeatherScreen")
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        itemsIndexed(daysList.value) { index, item ->
+                            ListItemCard(item)
+                        }
+                    }
+                }
+
                 else -> Log.d("TAG", "Unknown page")
             }
         }
