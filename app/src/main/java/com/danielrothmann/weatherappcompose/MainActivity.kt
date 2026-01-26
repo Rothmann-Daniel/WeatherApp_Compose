@@ -38,9 +38,23 @@ class MainActivity : ComponentActivity() {
                 val daysList = remember{
                     mutableStateOf(listOf<WeatherModel>())
                 }
+
+                val currentDay = remember{
+                    mutableStateOf(WeatherModel(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                    ))
+
+                }
                 // функция для получения данных
                 LaunchedEffect(Unit) {
-                    getResult("Moscow", daysList, this@MainActivity)
+                    getResult("Moscow", daysList, currentDay, this@MainActivity)
                 }
 
                 Scaffold(modifier = Modifier
@@ -48,7 +62,8 @@ class MainActivity : ComponentActivity() {
                     .statusBarsPadding()) { innerPadding ->
                     MainScreen(
                         modifier = Modifier.padding(innerPadding),
-                        daysList = daysList
+                        daysList = daysList,
+                        currentDay = currentDay
                     )
                 }
             }
@@ -57,7 +72,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel>>, context: Context) {
+private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>, context: Context) {
     val url = "https://api.weatherapi.com/v1/forecast.json?" +  // Изменено с current.json на forecast.json
             "key=${MainActivity.WEATHER_API_KEY}" +
             "&q=$cityName" +
@@ -73,6 +88,7 @@ private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel
         { response ->
             try {
                val list =  getWheatherByDays(response)
+                currentDay.value = list[0]
                 daysList.value = list
 
 
