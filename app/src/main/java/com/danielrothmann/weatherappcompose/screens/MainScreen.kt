@@ -49,7 +49,11 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, daysList: MutableState<List<WeatherModel>>) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    daysList: MutableState<List<WeatherModel>>,
+    currentDay: MutableState<WeatherModel>
+) {
     Image(
         painter = painterResource(id = R.drawable.weather_background),
         contentDescription = "weather_background",
@@ -62,9 +66,8 @@ fun MainScreen(modifier: Modifier = Modifier, daysList: MutableState<List<Weathe
         modifier = Modifier
             .fillMaxSize()
     ) {
-        InfoDetailsCard()
+        InfoDetailsCard(currentDay = currentDay)
         TablayoutDetails(daysList = daysList)
-        // ListItemCard()
     }
 
 
@@ -72,7 +75,14 @@ fun MainScreen(modifier: Modifier = Modifier, daysList: MutableState<List<Weathe
 
 @Preview
 @Composable
-fun InfoDetailsCard(modifier: Modifier = Modifier) {
+fun InfoDetailsCard(
+    modifier: Modifier = Modifier,
+    currentDay: MutableState<WeatherModel> = mutableStateOf(
+        WeatherModel(
+            "", "", "", "", "", "", "", ""
+        )
+    )
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -94,7 +104,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "20 Jan 2026 14:08",
+                    text = currentDay.value.localtime,
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.White,
@@ -102,13 +112,13 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     )
                 )
                 AsyncImage(
-                    model = "https://cdn.weatherapi.com/weather/64x64/night/116.png",
+                    model = "https:" + currentDay.value.imageUrl,
                     contentDescription = "condition",
                     modifier = Modifier.size(36.dp)
                 )
             }
             Text(
-                text = "City",
+                text = currentDay.value.city,
                 style = TextStyle(
                     fontSize = 24.sp,
                     color = Color.White,
@@ -116,8 +126,14 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     textAlign = TextAlign.Center
                 )
             )
+            // Безопасное преобразование температуры
+            val tempText = try {
+                "${currentDay.value.currentTemp.toFloatOrNull()?.toInt() ?: 0}°C"
+            } catch (e: Exception) {
+                "N/A"
+            }
             Text(
-                text = "23°C",
+                text = tempText,
                 style = TextStyle(
                     fontSize = 60.sp,
                     color = Color.White,
@@ -126,7 +142,7 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                 )
             )
             Text(
-                text = "Condition",
+                text = currentDay.value.condition,
                 style = TextStyle(
                     fontSize = 16.sp,
                     color = Color.White,
@@ -152,7 +168,10 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
                     )
                 }
                 Text(
-                    text = "23°C / 17°C",
+                    text = "max:"+
+                    "${currentDay.value.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C" + " / " +
+                            "min: "
+                            + "${currentDay.value.minTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C",
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.White.copy(alpha = 0.8f),
@@ -179,7 +198,10 @@ fun InfoDetailsCard(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun TablayoutDetails(daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf()), modifier: Modifier = Modifier) {
+fun TablayoutDetails(
+    modifier: Modifier = Modifier,
+    daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf())
+) {
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
     val tabIndex = pagerState.currentPage
