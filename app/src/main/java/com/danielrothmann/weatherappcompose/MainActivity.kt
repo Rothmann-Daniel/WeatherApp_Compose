@@ -19,6 +19,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.danielrothmann.weatherappcompose.data.WeatherModel
+import com.danielrothmann.weatherappcompose.screens.DialogSearch
 import com.danielrothmann.weatherappcompose.screens.MainScreen
 import com.danielrothmann.weatherappcompose.ui.theme.WeatherAppComposeTheme
 import org.json.JSONObject
@@ -37,6 +38,9 @@ class MainActivity : ComponentActivity() {
                 val daysList = remember {
                     mutableStateOf(listOf<WeatherModel>())
                 }
+                val dialogState = remember {
+                    mutableStateOf(false)
+                }
 
                 val currentDay = remember {
                     mutableStateOf(
@@ -46,12 +50,12 @@ class MainActivity : ComponentActivity() {
 
                 val isLoading = remember { mutableStateOf(false) }
 
-                // Функция для обновления данных
-                val onSyncClick: () -> Unit = {
+                // Функция для обновления данных по городу
+                val onSyncClick: (String) -> Unit = { cityName ->
                     if (!isLoading.value) {
                         isLoading.value = true
                         getResult(
-                            "Moscow",
+                            cityName,  // Используем переданный город
                             daysList,
                             currentDay,
                             this@MainActivity,
@@ -63,9 +67,28 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Первоначальная загрузка
+                // Функция для открытия диалога поиска
+                val onSearchCityClick: () -> Unit = {
+                    dialogState.value = true
+                }
+
+                // Функция для обработки выбора города из диалога
+                val onCitySelected: (String) -> Unit = { cityName ->
+                    dialogState.value = false  // Закрываем диалог
+                    onSyncClick(cityName)      // Загружаем данные для нового города
+                }
+
+                // Первоначальная загрузка для Москвы
                 LaunchedEffect(Unit) {
-                    onSyncClick()
+                    onSyncClick("Moscow")
+                }
+
+                // Показываем диалог поиска если нужно
+                if (dialogState.value) {
+                    DialogSearch(
+                        dialogState = dialogState,
+                        onCitySelected = onCitySelected
+                    )
                 }
 
                 Scaffold(
@@ -77,7 +100,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         daysList = daysList,
                         currentDay = currentDay,
-                        onSyncClick = onSyncClick,
+                        onSyncClick = { onSyncClick(currentDay.value.city) }, // Синхронизируем текущий город
+                        onSearchCityClick = onSearchCityClick, // Передаем функцию открытия диалога
                         isLoading = isLoading
                     )
                 }
@@ -85,6 +109,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 
 private fun getResult(
@@ -113,7 +138,9 @@ private fun getResult(
             } catch (e: Exception) {
                 Log.d("Error", e.message.toString())
             } finally {
-                // ВЫЗЫВАЕМ КОЛЛБЭК В ЛЮБОМ СЛУЧАЕ (успех или ошибка)
+                /* ВЫЗЫВАЕМ КОЛЛБЭК В ЛЮБОМ СЛУЧАЕ (успех или ошибка)
+                finally блок в try-catch гарантирует, что коллбэк вызовется даже при ошибке парсинга JSON
+                 */
                 onComplete?.invoke()
             }
         },

@@ -59,6 +59,7 @@ fun MainScreen(
     daysList: MutableState<List<WeatherModel>>,
     currentDay: MutableState<WeatherModel>,
     onSyncClick: () -> Unit,  // onSyncClick теперь сам управляет isLoading
+    onSearchCityClick: () -> Unit = {},
     isLoading: MutableState<Boolean> = remember { mutableStateOf(false) }
 ) {
     Box(
@@ -82,6 +83,11 @@ fun MainScreen(
                     Log.d("TAG", "Click btn_sync ")
                     // Просто вызываем onSyncClick - он сам управляет isLoading
                     onSyncClick()
+                },
+                onSearchCityClick = {
+                    Log.d("TAG", "Click btn_search ")
+                    onSearchCityClick()
+
                 }
             )
             TablayoutDetails(daysList = daysList, currentDay = currentDay)
@@ -111,7 +117,8 @@ fun InfoDetailsCard(
             "", "", "", "", "", "", "", "",""
         )
     ),
-    onClickSync: ()-> Unit
+    onClickSync: ()-> Unit,
+    onSearchCityClick: () -> Unit  // Добавляем параметр
 ) {
     Card(
         modifier = Modifier
@@ -188,6 +195,7 @@ fun InfoDetailsCard(
                 IconButton(
                     onClick = { /*TODO*/
                         Log.d("TAG", "Click btn_search ")
+                        onSearchCityClick()
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
