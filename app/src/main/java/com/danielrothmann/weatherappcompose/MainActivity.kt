@@ -26,7 +26,6 @@ import org.json.JSONObject
 class MainActivity : ComponentActivity() {
 
     companion object {
-        // Константы
         const val WEATHER_API_KEY = "b8c98a14f49644988ae92245252006"
     }
 
@@ -35,36 +34,51 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WeatherAppComposeTheme {
-                val daysList = remember{
+                val daysList = remember {
                     mutableStateOf(listOf<WeatherModel>())
                 }
 
-                val currentDay = remember{
-                    mutableStateOf(WeatherModel(
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        ""
-                    ))
-
+                val currentDay = remember {
+                    mutableStateOf(
+                        WeatherModel("", "", "", "", "", "", "", "", "")
+                    )
                 }
-                // функция для получения данных
+
+                val isLoading = remember { mutableStateOf(false) }
+
+                // Функция для обновления данных
+                val onSyncClick: () -> Unit = {
+                    if (!isLoading.value) {
+                        isLoading.value = true
+                        getResult(
+                            "Moscow",
+                            daysList,
+                            currentDay,
+                            this@MainActivity,
+                            onComplete = {
+                                // Сбрасываем состояние загрузки ПОСЛЕ получения ответа
+                                isLoading.value = false
+                            }
+                        )
+                    }
+                }
+
+                // Первоначальная загрузка
                 LaunchedEffect(Unit) {
-                    getResult("Moscow", daysList, currentDay, this@MainActivity)
+                    onSyncClick()
                 }
 
-                Scaffold(modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) { innerPadding ->
                     MainScreen(
                         modifier = Modifier.padding(innerPadding),
                         daysList = daysList,
-                        currentDay = currentDay
+                        currentDay = currentDay,
+                        onSyncClick = onSyncClick,
+                        isLoading = isLoading
                     )
                 }
             }
@@ -73,14 +87,19 @@ class MainActivity : ComponentActivity() {
 }
 
 
-private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>, context: Context) {
-    val url = "https://api.weatherapi.com/v1/forecast.json?" +  // Изменено с current.json на forecast.json
+private fun getResult(
+    cityName: String,
+    daysList: MutableState<List<WeatherModel>>,
+    currentDay: MutableState<WeatherModel>,
+    context: Context,
+    onComplete: (() -> Unit)? = null  // Добавляем коллбэк для завершения
+) {
+    val url = "https://api.weatherapi.com/v1/forecast.json?" +
             "key=${MainActivity.WEATHER_API_KEY}" +
             "&q=$cityName" +
             "&days=3" +
             "&aqi=no" +
             "&alerts=no"
-
 
     val queue = Volley.newRequestQueue(context)
     val stringRequest = StringRequest(
@@ -88,17 +107,20 @@ private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel
         url,
         { response ->
             try {
-                val list =  getWheatherByDays(response)
+                val list = getWheatherByDays(response)
                 currentDay.value = list[0]
                 daysList.value = list
-
-
             } catch (e: Exception) {
                 Log.d("Error", e.message.toString())
+            } finally {
+                // ВЫЗЫВАЕМ КОЛЛБЭК В ЛЮБОМ СЛУЧАЕ (успех или ошибка)
+                onComplete?.invoke()
             }
         },
-        { error  ->
+        { error ->
             Log.e("Error", error.message.toString())
+            // ВЫЗЫВАЕМ КОЛЛБЭК ПРИ ОШИБКЕ СЕТИ
+            onComplete?.invoke()
         }
     )
     queue.add(stringRequest)
