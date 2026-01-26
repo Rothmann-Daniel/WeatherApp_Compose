@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,8 @@ import com.danielrothmann.weatherappcompose.R
 import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 @Composable
@@ -67,7 +70,7 @@ fun MainScreen(
             .fillMaxSize()
     ) {
         InfoDetailsCard(currentDay = currentDay)
-        TablayoutDetails(daysList = daysList)
+        TablayoutDetails(daysList = daysList, currentDay = currentDay)
     }
 
 
@@ -79,7 +82,7 @@ fun InfoDetailsCard(
     modifier: Modifier = Modifier,
     currentDay: MutableState<WeatherModel> = mutableStateOf(
         WeatherModel(
-            "", "", "", "", "", "", "", ""
+            "", "", "", "", "", "", "", "",""
         )
     )
 ) {
@@ -168,8 +171,10 @@ fun InfoDetailsCard(
                     )
                 }
                 Text(
-                    text = "max:"+
-                    "${currentDay.value.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C" + " / " +
+                    text = "max:" +
+                            "${
+                                currentDay.value.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"
+                            }°C" + " / " +
                             "min: "
                             + "${currentDay.value.minTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C",
                     style = TextStyle(
@@ -196,16 +201,25 @@ fun InfoDetailsCard(
     }
 }
 
-@Preview
 @Composable
 fun TablayoutDetails(
     modifier: Modifier = Modifier,
-    daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf())
+    daysList: MutableState<List<WeatherModel>> = mutableStateOf(listOf()),
+    currentDay: MutableState<WeatherModel>
 ) {
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
     val tabIndex = pagerState.currentPage
     val coroutineScope = rememberCoroutineScope()
+
+    // Вычисляем список для отображения
+    val displayList = remember(tabIndex, currentDay.value.hours, daysList.value) {
+        when (tabIndex) {
+            0 -> getWeatherByHours(currentDay.value.hours) // Часы
+            1 -> daysList.value                            // Дни
+            else -> daysList.value
+        }
+    }
 
     Column(
         modifier = modifier
@@ -248,31 +262,50 @@ fun TablayoutDetails(
             }
         }
 
-        // HorizontalPager ЗА TabRow
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) { page ->
-            when (page) {
-                0 -> {
-                    Log.d("TAG", "HoursWeatherScreen")
+            val showTimeInsteadOfDate = page == 0 // true для часов
+            val isClickable = page == 1 // Кликабельны только дни
 
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(displayList) { index, item ->
+                    ListItemCard(
+                        item = item,
+                        currentDay = currentDay,
+                        showTimeInsteadOfDate = showTimeInsteadOfDate,
+                        isClickable = isClickable
+                    )
                 }
-
-                1 -> {
-                    Log.d("TAG", "DaysWeatherScreen")
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        itemsIndexed(daysList.value) { index, item ->
-                            ListItemCard(item)
-                        }
-                    }
-                }
-
-                else -> Log.d("TAG", "Unknown page")
             }
         }
     }
+}
+
+
+private fun getWeatherByHours(hours: String): List<WeatherModel> {
+    if (hours.isEmpty()) return listOf()
+    val hoursArray = JSONArray(hours)
+    val list = ArrayList<WeatherModel>()
+
+    for (i in 0 until hoursArray.length()) {
+        val item = hoursArray[i] as JSONObject
+        list.add(
+            WeatherModel(
+                city = "",
+                time = item.getString("time"), // "YYYY-MM-DD HH:mm"
+                condition = item.getJSONObject("condition").getString("text"),
+                imageUrl = item.getJSONObject("condition").getString("icon"),
+                currentTemp = item.getString("temp_c"),
+                maxTemp = "",
+                minTemp = "",
+                hours = "",
+                localtime = ""
+            )
+        )
+    }
+    return list
 }

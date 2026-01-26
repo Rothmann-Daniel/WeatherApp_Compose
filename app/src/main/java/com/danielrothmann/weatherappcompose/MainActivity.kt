@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
                         "",
                         "",
                         "",
+                        "",
                         ""
                     ))
 
@@ -87,13 +88,13 @@ private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel
         url,
         { response ->
             try {
-               val list =  getWheatherByDays(response)
+                val list =  getWheatherByDays(response)
                 currentDay.value = list[0]
                 daysList.value = list
 
 
             } catch (e: Exception) {
-               Log.d("Error", e.message.toString())
+                Log.d("Error", e.message.toString())
             }
         },
         { error  ->
@@ -111,27 +112,29 @@ private fun getWheatherByDays(response: String): List<WeatherModel> {
     val days = mainObject.getJSONObject("forecast").getJSONArray("forecastday")
 
     for (i in 0 until days.length()) {
-        val item = days[i] as JSONObject // каст
+        val item = days[i] as JSONObject
         list.add(
             WeatherModel(
-                city,
-                item.getString("date"),
-                item.getJSONObject("day").getJSONObject("condition").getString("text"),
-                item.getJSONObject("day").getJSONObject("condition").getString("icon"),
-                "",
-                item.getJSONObject("day").getString("maxtemp_c"),
-                item.getJSONObject("day").getString("mintemp_c"),
-                item.getJSONArray("hour").toString()
+                city = city,
+                time = item.getString("date"),
+                localtime = "",
+                condition = item.getJSONObject("day").getJSONObject("condition").getString("text"),
+                imageUrl = item.getJSONObject("day").getJSONObject("condition").getString("icon"),
+                currentTemp = "",
+                maxTemp = item.getJSONObject("day").getString("maxtemp_c"),
+                minTemp = item.getJSONObject("day").getString("mintemp_c"),
+                hours = item.getJSONArray("hour").toString()
             )
         )
     }
-    list[0] = list[0].copy(
-        currentTemp = mainObject.getJSONObject("current").getString("temp_c"),
-        localtime = mainObject.getJSONObject("location").getString("localtime")
-    )
+    // Обновляем первый элемент (текущий день)
+    if (list.isNotEmpty()) {
+        list[0] = list[0].copy(
+            currentTemp = mainObject.getJSONObject("current").getString("temp_c"),
+            localtime = mainObject.getJSONObject("location").getString("localtime")
+        )
+    }
     return list
-
 }
-
 
 

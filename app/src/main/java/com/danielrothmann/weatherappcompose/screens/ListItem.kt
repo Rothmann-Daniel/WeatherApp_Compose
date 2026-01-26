@@ -1,5 +1,6 @@
 package com.danielrothmann.weatherappcompose.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,13 +26,27 @@ import com.danielrothmann.weatherappcompose.data.WeatherModel
 import com.danielrothmann.weatherappcompose.ui.theme.CardBackground
 
 @Composable
-fun ListItemCard(itemModel: WeatherModel) {
+fun ListItemCard(
+    item: WeatherModel,
+    currentDay: MutableState<WeatherModel>,
+    showTimeInsteadOfDate: Boolean = false,
+    isClickable: Boolean = true
+) {
     Card(
-        modifier = Modifier.fillMaxWidth()
-            .padding(top = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .clickable(enabled = isClickable && item.hours.isNotEmpty()) {
+                if (item.hours.isNotEmpty()) {
+                    currentDay.value = item.copy(
+                        currentTemp = if (item.currentTemp.isEmpty()) item.maxTemp else item.currentTemp,
+                        localtime = item.time
+                    )
+                }
+            },
         colors = CardDefaults.cardColors(containerColor = CardBackground.copy(0.3f)),
         shape = RoundedCornerShape(5.dp)
-    ){
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -41,27 +57,45 @@ fun ListItemCard(itemModel: WeatherModel) {
             Column(
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
             ) {
+                // Определяем что показывать: дату или время
+                val timeToShow = when {
+                    showTimeInsteadOfDate && item.time.contains(" ") ->
+                        item.time.substringAfter(" ") // "HH:mm" для часового прогноза
+                    item.localtime.isNotEmpty() ->
+                        item.localtime // Время обновления для текущего дня
+                    else ->
+                        item.time // Дата для прогноза на дни
+                }
+
                 Text(
-                    text = itemModel.localtime,
+                    text = timeToShow,
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.White
                     )
                 )
                 Text(
-                    text = itemModel.condition,
+                    text = item.condition,
                     style = TextStyle(
-                        fontSize = 16.sp,
-                        color = Color.White
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                 )
             }
-            Text(
-                text = if (itemModel.currentTemp.isNotEmpty()) {
-                    "${itemModel.currentTemp}°C"
+
+            // Безопасное отображение температуры
+            val tempText = try {
+                if (item.currentTemp.isNotEmpty()) {
+                    "${item.currentTemp.toFloatOrNull()?.toInt() ?: 0}°C"
                 } else {
-                    "${itemModel.maxTemp}°/${itemModel.minTemp}°C"
-                },
+                    "${item.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"}°/${item.minTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C"
+                }
+            } catch (e: Exception) {
+                "N/A"
+            }
+
+            Text(
+                text = tempText,
                 style = TextStyle(
                     fontSize = 24.sp,
                     color = Color.White,
@@ -70,8 +104,8 @@ fun ListItemCard(itemModel: WeatherModel) {
                 )
             )
             AsyncImage(
-                model = "https:${itemModel.imageUrl}",
-                contentDescription = "itemModel.imageUr",
+                model = "https:${item.imageUrl}",
+                contentDescription = "weather icon",
                 modifier = Modifier.size(36.dp)
             )
         }
