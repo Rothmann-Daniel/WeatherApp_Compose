@@ -130,7 +130,6 @@ private fun getWheatherByDays(response: String): List<WeatherModel> {
         localtime = mainObject.getJSONObject("location").getString("localtime")
     )
     return list
-
 }
 
 
