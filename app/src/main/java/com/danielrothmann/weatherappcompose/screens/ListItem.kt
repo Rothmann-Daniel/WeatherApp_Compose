@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -35,7 +36,7 @@ fun ListItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .padding(vertical = 4.dp)
             .clickable(enabled = isClickable && item.hours.isNotEmpty()) {
                 if (item.hours.isNotEmpty()) {
                     currentDay.value = item.copy(
@@ -50,45 +51,51 @@ fun ListItemCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Левая часть - время и условие (40% ширины)
             Column(
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
+                modifier = Modifier.weight(0.4f),
+                verticalArrangement = Arrangement.Center
             ) {
-                // Определяем что показывать: дату или время
                 val timeToShow = when {
                     showTimeInsteadOfDate && item.time.contains(" ") ->
-                        item.time.substringAfter(" ") // "HH:mm" для часового прогноза
+                        item.time.substringAfter(" ")
                     item.localtime.isNotEmpty() ->
-                        item.localtime // Время обновления для текущего дня
+                        item.localtime
                     else ->
-                        item.time // Дата для прогноза на дни
+                        item.time
                 }
 
                 Text(
                     text = timeToShow,
                     style = TextStyle(
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+                        fontSize = 15.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1
                 )
                 Text(
                     text = item.condition,
                     style = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.9f)
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            // Безопасное отображение температуры
+            // Центр - температура (фиксированная ширина)
             val tempText = try {
                 if (item.currentTemp.isNotEmpty()) {
                     "${item.currentTemp.toFloatOrNull()?.toInt() ?: 0}°C"
                 } else {
-                    "${item.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"}°/${item.minTemp.toFloatOrNull()?.toInt() ?: "N/A"}°C"
+                    val max = item.maxTemp.toFloatOrNull()?.toInt() ?: "N/A"
+                    val min = item.minTemp.toFloatOrNull()?.toInt() ?: "N/A"
+                    "$max°/$min°"
                 }
             } catch (e: Exception) {
                 "N/A"
@@ -97,16 +104,24 @@ fun ListItemCard(
             Text(
                 text = tempText,
                 style = TextStyle(
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier
+                    .weight(0.3f)
+                    .padding(horizontal = 8.dp),
+                textAlign = TextAlign.Center
             )
+
+            // Правая часть - иконка (30% ширины)
             AsyncImage(
                 model = "https:${item.imageUrl}",
                 contentDescription = "weather icon",
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier
+                    .weight(0.3f)
+                    .size(36.dp),
+                alignment = Alignment.CenterEnd
             )
         }
     }
