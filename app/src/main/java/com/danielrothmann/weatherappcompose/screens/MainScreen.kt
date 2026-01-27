@@ -2,12 +2,13 @@ package com.danielrothmann.weatherappcompose.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Tab
@@ -55,28 +57,58 @@ import org.json.JSONObject
 fun MainScreen(
     modifier: Modifier = Modifier,
     daysList: MutableState<List<WeatherModel>>,
-    currentDay: MutableState<WeatherModel>
+    currentDay: MutableState<WeatherModel>,
+    onSyncClick: () -> Unit,  // onSyncClick теперь сам управляет isLoading
+    onSearchCityClick: () -> Unit = {},
+    isLoading: MutableState<Boolean> = remember { mutableStateOf(false) }
 ) {
-    Image(
-        painter = painterResource(id = R.drawable.weather_background),
-        contentDescription = "weather_background",
-        modifier = Modifier
-            .fillMaxSize()
-            .alpha(0.7f),
-        contentScale = ContentScale.Crop // Использую Crop вместо FillBounds (по умолчанию)
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        InfoDetailsCard(currentDay = currentDay)
-        TablayoutDetails(daysList = daysList, currentDay = currentDay)
+        Image(
+            painter = painterResource(id = R.drawable.weather_background),
+            contentDescription = "weather_background",
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.7f),
+            contentScale = ContentScale.Crop
+        )
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            InfoDetailsCard(
+                currentDay = currentDay,
+                onClickSync = {
+                    Log.d("TAG", "Click btn_sync ")
+                    // Просто вызываем onSyncClick - он сам управляет isLoading
+                    onSyncClick()
+                },
+                onSearchCityClick = {
+                    Log.d("TAG", "Click btn_search ")
+                    onSearchCityClick()
+
+                }
+            )
+            TablayoutDetails(daysList = daysList, currentDay = currentDay)
+        }
+
+        // Индикатор загрузки
+        if (isLoading.value) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
     }
-
-
 }
 
-@Preview
+
+
 @Composable
 fun InfoDetailsCard(
     modifier: Modifier = Modifier,
@@ -84,7 +116,9 @@ fun InfoDetailsCard(
         WeatherModel(
             "", "", "", "", "", "", "", "",""
         )
-    )
+    ),
+    onClickSync: ()-> Unit,
+    onSearchCityClick: () -> Unit  // Добавляем параметр
 ) {
     Card(
         modifier = Modifier
@@ -161,6 +195,7 @@ fun InfoDetailsCard(
                 IconButton(
                     onClick = { /*TODO*/
                         Log.d("TAG", "Click btn_search ")
+                        onSearchCityClick()
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
@@ -184,8 +219,9 @@ fun InfoDetailsCard(
                     )
                 )
                 IconButton(
-                    onClick = { /*TODO*/
+                    onClick = {
                         Log.d("TAG", "Click btn_sync ")
+                        onClickSync.invoke()
                     },
                     modifier = Modifier.size(48.dp)
                 ) {

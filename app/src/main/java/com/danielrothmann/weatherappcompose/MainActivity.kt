@@ -14,57 +14,112 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.danielrothmann.weatherappcompose.data.WeatherModel
+import com.danielrothmann.weatherappcompose.screens.DialogSearch
 import com.danielrothmann.weatherappcompose.screens.MainScreen
 import com.danielrothmann.weatherappcompose.ui.theme.WeatherAppComposeTheme
+import com.danielrothmann.weatherappcompose.utils.DataStoreManager
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
 
     companion object {
-        // Константы
         const val WEATHER_API_KEY = "b8c98a14f49644988ae92245252006"
     }
+
+    private lateinit var dataStoreManager: DataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        dataStoreManager = DataStoreManager(this)
+
         setContent {
             WeatherAppComposeTheme {
-                val daysList = remember{
+                // Теперь все внутри setContent, что является Composable контекстом
+                val daysList = remember {
                     mutableStateOf(listOf<WeatherModel>())
                 }
-
-                val currentDay = remember{
-                    mutableStateOf(WeatherModel(
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        ""
-                    ))
-
+                val dialogState = remember {
+                    mutableStateOf(false)
                 }
-                // функция для получения данных
+
+                val currentDay = remember {
+                    mutableStateOf(
+                        WeatherModel("", "", "", "", "", "", "", "", "")
+                    )
+                }
+
+                val isLoading = remember { mutableStateOf(false) }
+                val coroutineScope = rememberCoroutineScope()
+
+                // Функция для загрузки погоды
+                val loadWeather: (String) -> Unit = { cityName ->
+                    if (!isLoading.value) {
+                        isLoading.value = true
+                        getResult(
+                            cityName,
+                            daysList,
+                            currentDay,
+                            this@MainActivity,
+                            onComplete = {
+                                isLoading.value = false
+                            }
+                        )
+                    }
+                }
+
+                // Функция для обработки выбора города из диалога
+                val onCitySelected: (String) -> Unit = { cityName ->
+                    dialogState.value = false
+                    // Сохраняем город в DataStore
+                    coroutineScope.launch {
+                        dataStoreManager.saveSelectedCity(cityName)
+                    }
+                    loadWeather(cityName)
+                }
+
+                // Функция для открытия диалога поиска
+                val onSearchCityClick: () -> Unit = {
+                    dialogState.value = true
+                }
+
+                // Первоначальная загрузка - получаем сохраненный город
                 LaunchedEffect(Unit) {
-                    getResult("Moscow", daysList, currentDay, this@MainActivity)
+                    val savedCity = dataStoreManager.getSelectedCityOnce()
+                    loadWeather(savedCity)
                 }
 
-                Scaffold(modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()) { innerPadding ->
+                // Показываем диалог поиска если нужно
+                if (dialogState.value) {
+                    DialogSearch(
+                        dialogState = dialogState,
+                        onCitySelected = onCitySelected
+                    )
+                }
+
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) { innerPadding ->
                     MainScreen(
                         modifier = Modifier.padding(innerPadding),
                         daysList = daysList,
-                        currentDay = currentDay
+                        currentDay = currentDay,
+                        onSyncClick = {
+                            // При синхронизации используем текущий город
+                            loadWeather(currentDay.value.city)
+                        },
+                        onSearchCityClick = onSearchCityClick,
+                        isLoading = isLoading
                     )
                 }
             }
@@ -72,15 +127,19 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>, context: Context) {
-    val url = "https://api.weatherapi.com/v1/forecast.json?" +  // Изменено с current.json на forecast.json
+private fun getResult(
+    cityName: String,
+    daysList: MutableState<List<WeatherModel>>,
+    currentDay: MutableState<WeatherModel>,
+    context: Context,
+    onComplete: (() -> Unit)? = null
+) {
+    val url = "https://api.weatherapi.com/v1/forecast.json?" +
             "key=${MainActivity.WEATHER_API_KEY}" +
             "&q=$cityName" +
             "&days=3" +
             "&aqi=no" +
             "&alerts=no"
-
 
     val queue = Volley.newRequestQueue(context)
     val stringRequest = StringRequest(
@@ -88,17 +147,18 @@ private fun getResult(cityName: String, daysList: MutableState<List<WeatherModel
         url,
         { response ->
             try {
-                val list =  getWheatherByDays(response)
+                val list = getWheatherByDays(response)
                 currentDay.value = list[0]
                 daysList.value = list
-
-
             } catch (e: Exception) {
                 Log.d("Error", e.message.toString())
+            } finally {
+                onComplete?.invoke()
             }
         },
-        { error  ->
+        { error ->
             Log.e("Error", error.message.toString())
+            onComplete?.invoke()
         }
     )
     queue.add(stringRequest)
@@ -136,5 +196,3 @@ private fun getWheatherByDays(response: String): List<WeatherModel> {
     }
     return list
 }
-
-
